@@ -1,7 +1,7 @@
 <?php
 /**
  * Behavior for make ActiveRecord model taggable
- * 
+ *
  * @link https://github.com/inblank/yii2-taggable
  * @copyright Copyright (c) 2016 Pavel Aleksandrov <inblank@yandex.ru>
  * @license http://opensource.org/licenses/MIT
@@ -98,7 +98,7 @@ class TaggableBehavior extends Behavior
     /**
      * Parse tags list into array
      * @param string|string[] $tags list of tags. If specified as a string, the tags must be separated by commas
-     * @return array
+     * @return string[]
      */
     protected function parseTags($tags)
     {
