@@ -1,0 +1,32 @@
+{
+    "name": "inblank/yii2-taggable",
+    "description": "The taggable behavior for the Yii 2 framework",
+    "keywords": [
+        "yii2",
+        "tag",
+        "tags",
+        "taggable"
+    ],
+    "type": "yii2-extension",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Pavel Aleksandrov",
+            "email": "inblank@yandex.ru"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "~2.0.0"
+    },
+    "require-dev": {
+        "codeception/codeception": "^2.1",
+        "yiisoft/yii2-codeception": "*",
+        "codeception/specify": "*",
+        "codeception/verify": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "inblank\\taggable\\": "src"
+        }
+    }
+}
