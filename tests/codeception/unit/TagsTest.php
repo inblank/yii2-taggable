@@ -3,6 +3,7 @@
 namespace inblank\taggable\tests;
 
 use app\models\Model;
+use app\models\Model2;
 use app\models\Tag;
 use Codeception\Specify;
 use yii;
@@ -18,6 +19,10 @@ class TagsTest extends TestCase
     public function testGeneral()
     {
         /** @var Model $model */
+        $model = new Model();
+        $model->setAttribute('title', 'Test without tag');
+        expect("we can save model without use behaviour methods", $model->save())->true();
+
         $model = new Model();
         $model->setAttribute('title', 'Test model 1');
         $model->setTagValues('tag1, tag2');
@@ -82,6 +87,12 @@ class TagsTest extends TestCase
             expect("tags count must be equal", yii\helpers\ArrayHelper::getColumn($tagsList, 'count'))->equals([1]);
             expect("we must get tags by behavior", $model->getTagValues())->equals(['tag3']);
         });
+
+        /** @var Model2 $model2 */
+        $model2 = new Model2();
+        $model2->setAttribute('title', 'Test model 1');
+        $model2->setTagValues('tag1, tag2');
+        expect("we can save model without tags links", $model2->save())->true();
 
     }
 

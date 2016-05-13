@@ -64,7 +64,7 @@ class TaggableBehavior extends Behavior
     /**
      * Get tags list
      * @param bool $asString sign get a list of tags as string
-     * @return string|string[]
+     * @return string[]|string
      */
     public function getTagValues($asString = false)
     {
@@ -74,11 +74,7 @@ class TaggableBehavior extends Behavior
             // trying to obtain related models
             $relation = $this->owner->getRelation('tagsList', false);
             if ($relation instanceof ActiveQuery) {
-                /** @var ActiveRecord $tag */
-                foreach ($relation->all() as $tag) {
-                    $this->_tagsList[] = $tag->getAttribute('text');
-                }
-                $this->_tagsList = array_unique($this->_tagsList);
+                $this->_tagsList = array_unique($relation->select('text')->column());
             }
         }
         return $asString === true ? implode(',', $this->_tagsList) : $this->_tagsList;
@@ -160,36 +156,38 @@ class TaggableBehavior extends Behavior
      */
     public function afterSave()
     {
-        if ($this->_tagsList !== null) {
-            if (!$this->owner->getIsNewRecord()) {
-                // clear old tags
-                $this->beforeDelete();
-                $this->afterDelete();
+        if ($this->_tagsList === null) {
+            return;
+        }
+        $relation = $this->owner->getRelation('tagsList', false);
+        if (!($relation instanceof ActiveQuery)) {
+            return;
+        }
+        if (!$this->owner->getIsNewRecord()) {
+            // clear old tags
+            $this->beforeDelete();
+            $this->afterDelete();
+        }
+        /** @var ActiveRecord $relationClass */
+        $relationClass = $relation->modelClass;
+        $ownerTagsList = [];
+        foreach ($this->_tagsList as $tagText) {
+            /* @var ActiveRecord $tag */
+            $tag = $relationClass::findOne(['text' => $tagText]);
+            if ($tag === null) {
+                $tag = new $relationClass();
+                $tag->setAttribute('text', $tagText);
             }
-            $relation = $this->owner->getRelation('tagsList', false);
-            if ($relation instanceof ActiveQuery) {
-                /** @var ActiveRecord $relationClass */
-                $relationClass = $relation->modelClass;
-                $ownerTagsList = [];
-                foreach ($this->_tagsList as $tagText) {
-                    /* @var ActiveRecord $tag */
-                    $tag = $relationClass::findOne(['text' => $tagText]);
-                    if ($tag === null) {
-                        $tag = new $relationClass();
-                        $tag->setAttribute('text', $tagText);
-                    }
-                    $tag->setAttribute('count', $tag->getAttribute('count') + 1);
-                    if ($tag->save()) {
-                        $ownerTagsList[] = [$this->owner->getPrimaryKey(), $tag->getPrimaryKey()];
-                    }
-                }
-                if (!empty($ownerTagsList)) {
-                    $this->owner->getDb()
-                        ->createCommand()
-                        ->batchInsert($relation->via->from[0], [key($relation->via->link), current($relation->link)], $ownerTagsList)
-                        ->execute();
-                }
+            $tag->setAttribute('count', $tag->getAttribute('count') + 1);
+            if ($tag->save()) {
+                $ownerTagsList[] = [$this->owner->getPrimaryKey(), $tag->getPrimaryKey()];
             }
+        }
+        if (!empty($ownerTagsList)) {
+            $this->owner->getDb()
+                ->createCommand()
+                ->batchInsert($relation->via->from[0], [key($relation->via->link), current($relation->link)], $ownerTagsList)
+                ->execute();
         }
     }
 
