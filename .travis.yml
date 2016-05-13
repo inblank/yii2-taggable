@@ -14,10 +14,12 @@ services:
 
 before_script:
   - mysql -e 'create database testdb;'
+  - cd tests
+  - ../vendor/bin/codecept build
 
 script:
-  - vendor/bin/codecept run --coverage --coverage-xml --coverage-html
+  - ../vendor/bin/codecept run --coverage --coverage-xml
 
 after_script:
   - wget https://scrutinizer-ci.com/ocular.phar
-  - php ocular.phar code-coverage:upload --format=php-clover tests/codeception/_output/coverage.xml
+  - php ocular.phar code-coverage:upload --format=php-clover codeception/_output/coverage.xml
