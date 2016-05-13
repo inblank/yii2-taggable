@@ -10,6 +10,7 @@
 namespace inblank\taggable;
 
 use yii\base\Behavior;
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use yii\db\Query;
 
@@ -72,7 +73,7 @@ class TaggableBehavior extends Behavior
             $this->_tagsList = [];
             // trying to obtain related models
             $relation = $this->owner->getRelation('tagsList', false);
-            if ($relation) {
+            if ($relation instanceof ActiveQuery) {
                 /** @var ActiveRecord $tag */
                 foreach ($relation->all() as $tag) {
                     $this->_tagsList[] = $tag->getAttribute('text');
@@ -81,18 +82,6 @@ class TaggableBehavior extends Behavior
             }
         }
         return $asString === true ? implode(',', $this->_tagsList) : $this->_tagsList;
-    }
-
-    /**
-     * check that the owner has the attribute `tags`
-     * @return bool
-     */
-    protected function ownerHasTagAttribute()
-    {
-        if ($this->_hasTagAttribute === null) {
-            $this->_hasTagAttribute = $this->owner->hasAttribute('tags');
-        }
-        return $this->_hasTagAttribute;
     }
 
     /**
@@ -113,6 +102,18 @@ class TaggableBehavior extends Behavior
         if ($this->ownerHasTagAttribute()) {
             $this->owner->setAttribute('tags', $this->getTagValues(true));
         }
+    }
+
+    /**
+     * check that the owner has the attribute `tags`
+     * @return bool
+     */
+    protected function ownerHasTagAttribute()
+    {
+        if ($this->_hasTagAttribute === null) {
+            $this->_hasTagAttribute = $this->owner->hasAttribute('tags');
+        }
+        return $this->_hasTagAttribute;
     }
 
     /**
@@ -166,7 +167,7 @@ class TaggableBehavior extends Behavior
                 $this->afterDelete();
             }
             $relation = $this->owner->getRelation('tagsList', false);
-            if ($relation) {
+            if ($relation instanceof ActiveQuery) {
                 /** @var ActiveRecord $relationClass */
                 $relationClass = $relation->modelClass;
                 $ownerTagsList = [];
@@ -200,7 +201,7 @@ class TaggableBehavior extends Behavior
         // store tag ids list
         $this->_tagsForDelete = [];
         $relation = $this->owner->getRelation('tagsList', false);
-        if ($relation) {
+        if ($relation instanceof ActiveQuery) {
             $this->_tagsForDelete = (new Query())
                 ->select(current($relation->link))
                 ->from($relation->via->from[0])
@@ -217,7 +218,7 @@ class TaggableBehavior extends Behavior
         // after complete owner delete delete tags links
         if (!empty($this->_tagsForDelete)) {
             $relation = $this->owner->getRelation('tagsList', false);
-            if (!empty($relation)) {
+            if ($relation instanceof ActiveQuery) {
                 /** @var ActiveRecord $class */
                 $class = $relation->modelClass;
                 // decrease counters
